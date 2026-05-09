@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   Clock,
@@ -9,133 +9,42 @@ import {
   Sparkles,
   ArrowRight,
   TrendingUp,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
 } from "lucide-react";
-
-// Mock categories
-const categories = [
-  "All Courses",
-  "Web Development",
-  "Design",
-  "AI & Data Science",
-  "Mobile Apps",
-];
-
-// Mock courses data
-const courses = [
-  {
-    id: "1",
-    title: "Full Stack React & Next.js Masterclass",
-    description:
-      "Build modern, premium web applications with Next.js 15, React 19, TypeScript, and Tailwind CSS from scratch.",
-    category: "Web Development",
-    author: "Alex Rivers",
-    rating: 4.9,
-    reviewsCount: 1240,
-    duration: "24 hours",
-    lessons: 48,
-    level: "Intermediate",
-    price: "$49.99",
-    image:
-      "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=600&q=80",
-    badge: "Bestseller",
-    badgeColor: "bg-amber-500 text-white",
-  },
-  {
-    id: "2",
-    title: "UI/UX Design Systems with Figma",
-    description:
-      "Design comprehensive design systems, responsive components, and stunning interactive prototypes in Figma.",
-    category: "Design",
-    author: "Sophia Sterling",
-    rating: 4.8,
-    reviewsCount: 852,
-    duration: "16 hours",
-    lessons: 32,
-    level: "All Levels",
-    price: "$39.99",
-    image:
-      "https://images.unsplash.com/photo-1541462608143-67571c6738dd?auto=format&fit=crop&w=600&q=80",
-    badge: "Trending",
-    badgeColor: "bg-purple-500 text-white",
-  },
-  {
-    id: "3",
-    title: "Artificial Intelligence & Deep Learning",
-    description:
-      "An intuitive introduction to neural networks, machine learning models, NLP, and computer vision using Python.",
-    category: "AI & Data Science",
-    author: "Dr. Ethan Vance",
-    rating: 5.0,
-    reviewsCount: 412,
-    duration: "32 hours",
-    lessons: 60,
-    level: "Advanced",
-    price: "$59.99",
-    image:
-      "https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=600&q=80",
-    badge: "New",
-    badgeColor: "bg-emerald-500 text-white",
-  },
-  {
-    id: "4",
-    title: "iOS 18 Swift & SwiftUI Bootcamp",
-    description:
-      "Learn to build immersive mobile apps for iPhone, iPad, and Mac using Swift, SwiftUI, and modern state management.",
-    category: "Mobile Apps",
-    author: "Liam Cross",
-    rating: 4.7,
-    reviewsCount: 618,
-    duration: "20 hours",
-    lessons: 40,
-    level: "Beginner",
-    price: "$44.99",
-    image:
-      "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&w=600&q=80",
-    badge: "Popular",
-    badgeColor: "bg-blue-500 text-white",
-  },
-  {
-    id: "5",
-    title: "Advanced Tailwind CSS v4 & Styling Systems",
-    description:
-      "Unlock the power of Tailwind v4's high-performance compilation, native cascades, custom themes, and animations.",
-    category: "Web Development",
-    author: "Sarah Jenkins",
-    rating: 4.9,
-    reviewsCount: 310,
-    duration: "12 hours",
-    lessons: 24,
-    level: "Advanced",
-    price: "$29.99",
-    image:
-      "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=600&q=80",
-    badge: "Hot",
-    badgeColor: "bg-rose-500 text-white",
-  },
-  {
-    id: "6",
-    title: "Mastering Creative Copywriting & Content",
-    description:
-      "Craft high-converting headlines, copy that drives user engagement, and storytelling techniques for growth.",
-    category: "Design",
-    author: "Diana Prince",
-    rating: 4.6,
-    reviewsCount: 198,
-    duration: "8 hours",
-    lessons: 15,
-    level: "Beginner",
-    price: "$19.99",
-    image:
-      "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=600&q=80",
-    badge: "",
-    badgeColor: "",
-  },
-];
+import { courses, categories } from "./courses-data";
 
 export default function BrowsePage() {
   const [selectedCategory, setSelectedCategory] = useState("All Courses");
+  const [searchInputValue, setSearchInputValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
+  const COURSES_PER_PAGE = 9;
+
+  // Debounce search query
+  useEffect(() => {
+    if (searchInputValue !== searchQuery) {
+      setIsSearching(true);
+    }
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInputValue);
+      setIsSearching(false);
+      setCurrentPage(1); // Reset page to 1 when search query changes
+    }, 300); // 300ms debounce delay
+
+    return () => clearTimeout(timer);
+  }, [searchInputValue, searchQuery]);
+
+  // Handle category selection
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    setCurrentPage(1); // Reset page to 1 when category changes
+  };
+
+  // Filter courses based on category and search query
   const filteredCourses = courses.filter((course) => {
     const matchesCategory =
       selectedCategory === "All Courses" ||
@@ -147,6 +56,40 @@ export default function BrowsePage() {
     return matchesCategory && matchesSearch;
   });
 
+  // Pagination computations
+  const totalPages = Math.ceil(filteredCourses.length / COURSES_PER_PAGE);
+  const startIndex = (currentPage - 1) * COURSES_PER_PAGE;
+  const paginatedCourses = filteredCourses.slice(
+    startIndex,
+    startIndex + COURSES_PER_PAGE
+  );
+
+  // Ensure current page is valid when filters reduce total pages
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [filteredCourses.length, totalPages, currentPage]);
+
+  // Generate page numbers with ellipses for premium pagination UX
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        pages.push(1, 2, 3, 4, "...", totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1, "...", totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
+      }
+    }
+    return pages;
+  };
+
   return (
     <div className="flex-1 w-full relative bg-linear-to-b from-zinc-50 via-white to-zinc-50 dark:from-zinc-950 dark:via-zinc-900/30 dark:to-zinc-950 transition-colors duration-500 overflow-hidden">
       {/* Decorative Glows */}
@@ -157,7 +100,7 @@ export default function BrowsePage() {
 
       <div className="relative py-10 px-8 max-w-7xl mx-auto w-full">
         {/* Premium Hero Banner */}
-        <section className="relative rounded-3xl overflow-hidden bg-linear-to-r from-blue-600 via-indigo-600 to-indigo-700 text-white p-10 md:p-14 shadow-xl shadow-blue-500/10 mb-12">
+        <section className="relative rounded-3xl overflow-hidden bg-linear-to-r from-blue-600 via-indigo-600 to-indigo-700 text-white p-10 md:p-14 shadow-xl shadow-blue-500/10 mb-12 animate-fade-in">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent)] pointer-events-none" />
           <div className="absolute -right-16 -bottom-16 w-64 h-64 rounded-full bg-indigo-500/30 blur-3xl pointer-events-none" />
 
@@ -201,12 +144,16 @@ export default function BrowsePage() {
 
             {/* Search Box */}
             <div className="relative max-w-md w-full md:w-80">
-              <Search className="absolute left-3.5 top-3.5 h-4.5 w-4.5 text-zinc-400" />
+              {isSearching ? (
+                <Loader2 className="absolute left-3.5 top-3.5 h-4.5 w-4.5 text-blue-500 dark:text-blue-400 animate-spin" />
+              ) : (
+                <Search className="absolute left-3.5 top-3.5 h-4.5 w-4.5 text-zinc-400 dark:text-zinc-500" />
+              )}
               <input
                 type="text"
                 placeholder="Search courses, mentors..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={searchInputValue}
+                onChange={(e) => setSearchInputValue(e.target.value)}
                 className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
               />
             </div>
@@ -217,7 +164,7 @@ export default function BrowsePage() {
             {categories.map((category) => (
               <button
                 key={category}
-                onClick={() => setSelectedCategory(category)}
+                onClick={() => handleCategoryChange(category)}
                 className={`px-5 py-2.5 rounded-2xl text-sm font-semibold transition-all duration-300 cursor-pointer shrink-0 ${
                   selectedCategory === category
                     ? "bg-blue-600 text-white shadow-md shadow-blue-500/15"
@@ -231,9 +178,9 @@ export default function BrowsePage() {
         </section>
 
         {/* Courses Grid */}
-        {filteredCourses.length > 0 ? (
+        {paginatedCourses.length > 0 ? (
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredCourses.map((course) => (
+            {paginatedCourses.map((course) => (
               <article
                 key={course.id}
                 className="group flex flex-col h-full rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/80 overflow-hidden shadow-sm hover:shadow-xl dark:hover:shadow-black/20 hover:-translate-y-1.5 transition-all duration-300"
@@ -337,13 +284,80 @@ export default function BrowsePage() {
             <button
               onClick={() => {
                 setSelectedCategory("All Courses");
+                setSearchInputValue("");
                 setSearchQuery("");
+                setCurrentPage(1);
               }}
               className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-all duration-300 cursor-pointer"
             >
               Clear Filters
             </button>
           </section>
+        )}
+
+        {/* Premium Pagination Controls */}
+        {filteredCourses.length > COURSES_PER_PAGE && (
+          <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-zinc-100 dark:border-zinc-800/80 pt-8 animate-fade-in">
+            {/* Meta text */}
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">
+              Showing <span className="font-bold text-zinc-900 dark:text-zinc-100">{startIndex + 1}</span> to{" "}
+              <span className="font-bold text-zinc-900 dark:text-zinc-100">
+                {Math.min(startIndex + COURSES_PER_PAGE, filteredCourses.length)}
+              </span>{" "}
+              of <span className="font-bold text-zinc-900 dark:text-zinc-100">{filteredCourses.length}</span> courses
+            </p>
+
+            {/* Pagination Controls */}
+            <div className="flex items-center gap-1.5">
+              {/* Prev Button */}
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2.5 rounded-xl border border-zinc-200/60 dark:border-zinc-800/80 text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 disabled:opacity-40 disabled:pointer-events-none transition-all duration-300 cursor-pointer flex items-center justify-center shadow-xs"
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="h-4.5 w-4.5" />
+              </button>
+
+              {/* Page Numbers */}
+              {getPageNumbers().map((page, idx) => {
+                if (page === "...") {
+                  return (
+                    <span
+                      key={`ellipsis-${idx}`}
+                      className="px-2.5 py-1.5 text-sm text-zinc-400 dark:text-zinc-500 font-semibold"
+                    >
+                      ...
+                    </span>
+                  );
+                }
+                const pageNum = page as number;
+                return (
+                  <button
+                    key={`page-${pageNum}`}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 cursor-pointer min-w-[42px] flex items-center justify-center ${
+                      currentPage === pageNum
+                        ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                        : "bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border border-zinc-200/60 dark:border-zinc-800/80 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 hover:text-zinc-900 dark:hover:text-zinc-100 shadow-xs"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              {/* Next Button */}
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-2.5 rounded-xl border border-zinc-200/60 dark:border-zinc-800/80 text-zinc-600 dark:text-zinc-400 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 disabled:opacity-40 disabled:pointer-events-none transition-all duration-300 cursor-pointer flex items-center justify-center shadow-xs"
+                aria-label="Next page"
+              >
+                <ChevronRight className="h-4.5 w-4.5" />
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
