@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
 import {
   Compass,
   LayoutDashboard,
@@ -9,28 +11,21 @@ import {
   Mail,
   GraduationCap,
   LogIn,
+  Sun,
+  Moon,
+  Monitor,
 } from "lucide-react";
 import { UserButton, SignInButton, useAuth } from "@clerk/nextjs";
-
-// Sidebar Structure (top -> down)
-// Logo (Modern LMS) (text)
-// navigations with lucide icons: browse, dashboard, upgrade, newsletter
-
-// Requirements
-// 1. Navigations should be structured in object format:
-// {name: browse, icons: [LucideIcon], path: '/browse'}
-// Note: browse path should accessible in public
-//
-// 2. There should be visual indicators for hovering on navigation, activating navigation
-
-// Sidebar visual general guideline:
-// 1. Logo is on the top
-// 2. Navigations is under the logo
-// 3. At the right side, sidebar should have a visual line to distinguish with the main content
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { isSignedIn } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const navigation = [
     {
@@ -60,7 +55,7 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 h-screen sticky top-0 flex flex-col bg-white dark:bg-zinc-900 border-r border-zinc-200/80 dark:border-zinc-800/80 shrink-0 transition-all duration-300 z-30">
+    <aside className="w-64 h-screen sticky top-0 flex flex-col bg-white dark:bg-zinc-900 border-r border-zinc-200/80 dark:border-zinc-800/80 shrink-0 transition-all duration-300 z-40">
       {/* Logo Section */}
       <div className="h-20 flex items-center px-6 border-b border-zinc-100 dark:border-zinc-800/60">
         <Link href="/" className="flex items-center gap-3 group">
@@ -116,7 +111,57 @@ export default function Sidebar() {
       </nav>
 
       {/* User Profile Footer Section */}
-      <div className="p-4 border-t border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/50">
+      <div className="p-4 border-t border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-900/50 flex flex-col gap-4">
+        {/* Theme Toggler */}
+        <div className="flex items-center justify-between px-2 py-0.5">
+          <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+            Theme
+          </span>
+          {!mounted ? (
+            <div className="h-8 w-24 bg-zinc-100/50 dark:bg-zinc-800/20 rounded-lg animate-pulse" />
+          ) : (
+            <div className="flex items-center gap-0.5 p-0.5 bg-zinc-100/80 dark:bg-zinc-800/50 rounded-lg border border-zinc-200/30 dark:border-zinc-800/40 shadow-2xs">
+              <button
+                onClick={() => setTheme("light")}
+                title="Light mode"
+                className={`p-1.5 rounded-md transition-all duration-200 cursor-pointer ${
+                  theme === "light"
+                    ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-xs border border-zinc-200/30 dark:border-zinc-700/30"
+                    : "text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-200/20 dark:hover:bg-zinc-800/20"
+                }`}
+              >
+                <Sun className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={() => setTheme("dark")}
+                title="Dark mode"
+                className={`p-1.5 rounded-md transition-all duration-200 cursor-pointer ${
+                  theme === "dark"
+                    ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-xs border border-zinc-200/30 dark:border-zinc-700/30"
+                    : "text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-200/20 dark:hover:bg-zinc-800/20"
+                }`}
+              >
+                <Moon className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={() => setTheme("system")}
+                title="System preference"
+                className={`p-1.5 rounded-md transition-all duration-200 cursor-pointer ${
+                  theme === "system"
+                    ? "bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-xs border border-zinc-200/30 dark:border-zinc-700/30"
+                    : "text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-200/20 dark:hover:bg-zinc-800/20"
+                }`}
+              >
+                <Monitor className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Subtle Divider */}
+        <div className="h-px bg-zinc-200/20 dark:bg-zinc-800/40" />
+
+        {/* User Button or Sign In Button */}
         {isSignedIn ? (
           <div className="flex items-center gap-3 px-2 py-1.5">
             <UserButton
