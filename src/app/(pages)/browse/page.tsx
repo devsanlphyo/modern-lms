@@ -13,7 +13,9 @@ import {
   ChevronRight,
   Loader2,
 } from "lucide-react";
-import { courses, categories } from "./courses-data";
+import Link from "next/link";
+import { courses, categories, Course } from "./courses-data";
+import { getCategoryBadgeStyle } from "./course-outline-helper";
 
 export default function BrowsePage() {
   const [selectedCategory, setSelectedCategory] = useState("All Courses");
@@ -21,6 +23,17 @@ export default function BrowsePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Backward compatibility: If ?course=X query parameter is found, automatically redirect to dedicated course page /browse/X
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const courseId = params.get("course");
+      if (courseId) {
+        window.location.href = `/browse/${courseId}`;
+      }
+    }
+  }, []);
 
   const COURSES_PER_PAGE = 9;
 
@@ -181,9 +194,10 @@ export default function BrowsePage() {
         {paginatedCourses.length > 0 ? (
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {paginatedCourses.map((course) => (
-              <article
+              <Link
+                href={`/browse/${course.id}`}
                 key={course.id}
-                className="group flex flex-col h-full rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/80 overflow-hidden shadow-sm hover:shadow-xl dark:hover:shadow-black/20 hover:-translate-y-1.5 transition-all duration-300"
+                className="group flex flex-col h-full rounded-3xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/80 overflow-hidden shadow-sm hover:shadow-xl dark:hover:shadow-black/20 hover:-translate-y-1.5 transition-all duration-300 cursor-pointer"
               >
                 {/* Course Banner Image */}
                 <div className="relative aspect-video w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
@@ -195,23 +209,24 @@ export default function BrowsePage() {
                   />
                   <div className="absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
 
-                  {/* Category Badge & Special Badge */}
-                  <div className="absolute top-4 left-4 flex flex-wrap gap-2">
-                    <span className="px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md text-[11px] font-bold text-white uppercase tracking-wider">
-                      {course.category}
-                    </span>
-                    {course.badge && (
-                      <span
-                        className={`px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-wider shadow-sm ${course.badgeColor}`}
-                      >
-                        {course.badge}
-                      </span>
-                    )}
-                  </div>
                 </div>
 
                 {/* Course Details */}
                 <div className="p-6 flex-1 flex flex-col">
+                  {/* Category, Level & Special Badges */}
+                  <div className="flex flex-wrap items-center gap-2 mb-3.5">
+                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider ${getCategoryBadgeStyle(course.category)}`}>
+                      {course.category}
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200/50 dark:border-zinc-700/50 text-[10px] font-extrabold uppercase tracking-wider">
+                      {course.level}
+                    </span>
+                    {course.badge && (
+                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wider ${course.badgeColor}`}>
+                        {course.badge}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 mb-2">
                     Instructed by{" "}
                     <span className="text-zinc-700 dark:text-zinc-300 font-bold">
@@ -260,13 +275,13 @@ export default function BrowsePage() {
                           {course.price}
                         </span>
                       </div>
-                      <button className="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-800 dark:hover:bg-zinc-700/80 text-white dark:text-zinc-100 font-bold text-sm transition-all duration-300 cursor-pointer hover:shadow-md">
+                      <span className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-extrabold text-sm transition-all duration-300 shadow-sm shadow-blue-500/10 hover:shadow-md hover:shadow-blue-500/20 active:scale-[0.98]">
                         Enroll Course
-                      </button>
+                      </span>
                     </div>
                   </div>
                 </div>
-              </article>
+              </Link>
             ))}
           </section>
         ) : (

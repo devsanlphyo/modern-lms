@@ -449,11 +449,11 @@ const generateCourses = (): Course[] => {
   ];
 
   const badges = [
-    { text: "Bestseller", color: "bg-amber-500 text-white" },
-    { text: "Trending", color: "bg-purple-500 text-white" },
-    { text: "New", color: "bg-emerald-500 text-white" },
-    { text: "Popular", color: "bg-blue-500 text-white" },
-    { text: "Hot", color: "bg-rose-500 text-white" },
+    { text: "Bestseller", color: "bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/20 backdrop-blur-xs" },
+    { text: "Trending", color: "bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20 backdrop-blur-xs" },
+    { text: "New", color: "bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 backdrop-blur-xs" },
+    { text: "Popular", color: "bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 backdrop-blur-xs" },
+    { text: "Hot", color: "bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 backdrop-blur-xs" },
     { text: "", color: "" }
   ];
 
